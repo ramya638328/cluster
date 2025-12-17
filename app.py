@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# -------------------- PAGE CONFIG --------------------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Spending Score Predictor",
     page_icon="📊",
@@ -12,22 +12,18 @@ st.set_page_config(
 )
 
 st.title("📊 Spending Score Prediction App")
-st.write("Predict **Spending Score** based on **Annual Income**")
 
-# -------------------- LOAD MODEL --------------------
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model():
     with open("Hierarchikal Clustering.pkl", "rb") as file:
-        model = pickle.load(file)
-    return model
+        return pickle.load(file)
 
 model = load_model()
 
-st.success("✔ Model loaded successfully")
+st.success("Model loaded successfully")
 
-# -------------------- USER INPUT --------------------
-st.subheader("🔢 Enter Customer Details")
-
+# ---------------- USER INPUT ----------------
 annual_income = st.number_input(
     "Annual Income (k$)",
     min_value=0.0,
@@ -35,34 +31,19 @@ annual_income = st.number_input(
     step=1.0
 )
 
-# -------------------- PREDICTION --------------------
+# ---------------- PREDICTION ----------------
 if st.button("Predict Spending Score"):
     input_data = np.array([[annual_income]])
-
     prediction = model.predict(input_data)
 
-    st.subheader("📈 Prediction Result")
-    st.metric(
-        label="Predicted Spending Score",
-        value=round(float(prediction[0]), 2)
-    )
+    st.metric("Predicted Spending Score", round(float(prediction[0]), 2))
 
-    # -------------------- VISUALIZATION --------------------
-    st.subheader("📉 Visualization")
-
-    df_plot = pd.DataFrame({
-        "Annual Income": [annual_income],
-        "Spending Score": prediction
-    })
-
+    # ---------------- GRAPH ----------------
     fig, ax = plt.subplots()
-    ax.scatter(df_plot["Annual Income"], df_plot["Spending Score"])
+    ax.scatter(annual_income, prediction)
     ax.set_xlabel("Annual Income")
     ax.set_ylabel("Spending Score")
     ax.set_title("Income vs Spending Score")
 
     st.pyplot(fig)
 
-# -------------------- FOOTER --------------------
-st.markdown("---")
-st.caption("Hierarchical Clustering | Streamlit App")
