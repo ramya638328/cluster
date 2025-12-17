@@ -1,26 +1,33 @@
 import streamlit as st
 import pickle
 import numpy as np
+import pandas as pd
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="Spending Score Predictor",
+    page_title="Spending Score Analyzer",
     page_icon="📊",
     layout="centered"
 )
 
-st.title("📊 Spending Score Prediction App")
-st.write("Predict Spending Score based on Annual Income")
+st.title("📊 Spending Score Analyzer")
+st.write("Find Spending Score based on Annual Income")
 
-# ---------------- LOAD MODEL ----------------
+# ---------------- LOAD PKL DATA ----------------
 @st.cache_resource
-def load_model():
+def load_data():
     with open("Hierarchikal Clustering.pkl", "rb") as file:
-        model = pickle.load(file)
-    return model
+        data = pickle.load(file)
+    return data
 
-model = load_model()
-st.success("Model loaded successfully")
+data = load_data()
+
+# ---------------- VALIDATE PKL CONTENT ----------------
+if not isinstance(data, pd.DataFrame):
+    st.error("❌ The uploaded .pkl file does not contain a dataset")
+    st.stop()
+
+st.success("Dataset loaded successfully")
 
 # ---------------- USER INPUT ----------------
 annual_income = st.number_input(
@@ -30,17 +37,23 @@ annual_income = st.number_input(
     step=1.0
 )
 
-# ---------------- PREDICTION ----------------
-if st.button("Predict Spending Score"):
-    input_data = np.array([[annual_income]])
-    prediction = model.predict(input_data)
+# ---------------- FIND SPENDING SCORE ----------------
+if st.button("Get Spending Score"):
 
-    st.subheader("Prediction Result")
+    # Find closest income
+    closest_row = data.iloc[
+        (data["Annual Income (k$)"] - annual_income).abs().argsort()[:1]
+    ]
+
+    spending_score = closest_row["Spending Score (1-100)"].values[0]
+
+    st.subheader("Result")
     st.metric(
-        label="Predicted Spending Score",
-        value=round(float(prediction[0]), 2)
+        label="Estimated Spending Score",
+        value=int(spending_score)
     )
 
 # ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("Hierarchical Clustering | Streamlit App")
+
